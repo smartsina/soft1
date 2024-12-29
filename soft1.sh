@@ -1313,15 +1313,16 @@ while true; do
     echo ""
     echo -e "${CYAN} 6${NC}) ${RED}=> ${YELLOW}add 1month expierationdate${NC}"
     echo -e "${CYAN} 7${NC}) ${RED}=> ${YELLOW}delete user${NC}"
-    echo -e "${CYAN} h${NC}) ${RED}=> ${YELLOW}6to4 IPV6 Menu${NC}"
-    echo -e "${CYAN} j${NC}) ${RED}=> ${YELLOW}Extra native IPV6 Menu${NC}"
     echo -e "${CYAN} 8${NC}) ${RED}=> ${YELLOW}see expieration time of users${NC}"
     echo -e "${CYAN} 9${NC}) ${RED}=> ${YELLOW}add user ${NC}"
+    
     echo ""
     echo -e "${YELLOW}______________________________________________________${NC}"
     echo ""
     echo -e "${CYAN} H${NC}) ${RED}>>>> ${YELLOW}Help ${RED}<<<<${NC}"
     echo -e "${CYAN} 0${NC}) ${RED}>>>> ${YELLOW}Exit ${RED}<<<<${NC}"
+    echo -e "${CYAN} h${NC}) ${RED}=> ${YELLOW}6to4 IPV6 Menu${NC}"
+    echo -e "${CYAN} j${NC}) ${RED}=> ${YELLOW}Extra native IPV6 Menu${NC}"
     echo ""
     
     echo -ne "${GREEN}Select an option ${RED}[1-4]: ${NC}"
