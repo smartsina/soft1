@@ -534,7 +534,7 @@ echo -e "${GREEN}You can now use this username and password to log in to the Sof
 
 
 ################################
-see-expiration-date() {
+see-expieration-date() {
     # گرفتن رمز عبور ادمین از کاربر
 echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
 read  admin_password  # مخفی کردن رمز عبور
