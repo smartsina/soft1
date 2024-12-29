@@ -300,12 +300,14 @@ while IFS= read -r line; do
     else
       expiration_date="No Expiration"
     fi
-
-    # چاپ اطلاعات
-    echo -e "${YELLOW}$username ${GREEN}$expiration_date${NC}"  # دیباگ برای خروجی نهایی
-#    echo "$username $expiration_date"
-  fi
+#while read username expiration_date; do
+    echo -e "${YELLOW}$username ${GREEN}$expiration_date${NC}"
 done < /tmp/vpncmd_output.txt
+    # چاپ اطلاعات
+#    echo -e "${YELLOW}$username ${GREEN}$expiration_date${NC}"  # دیباگ برای خروجی نهایی
+#    echo "$username $expiration_date"
+#  fi
+#done < /tmp/vpncmd_output.txt
 
 
 
