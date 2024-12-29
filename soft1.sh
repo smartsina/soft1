@@ -57,7 +57,7 @@ if [ "$EUID" -ne 0 ]; then
     echo -e "\n ${RED}This script must be run as root.${NC}"
     exit 1
 fi
-
+##############################
 install() {
  # Change SSH ports using cat
     cat << EOF >> /etc/ssh/sshd_config
@@ -162,7 +162,7 @@ case "$reboot" in
     esac
 exit
 }
-
+#################################
 password() {
   clear
   # Use an expect script to automate interaction with vpncmd
@@ -194,7 +194,7 @@ EOF
 
    echo -e "${GREEN}Go to SOFTETHER SERVER MANAGER use your IP and ${password}.${NC}"
 }
-
+#########################################
 add-expieration-date () {
 
 # گرفتن رمز عبور ادمین از کاربر
@@ -202,11 +202,12 @@ echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
 read  admin_password  # مخفی کردن رمز عبور
 echo ""
 
-# تعریف پسورد ثابت ادمین
-#admin_password="Mohamadreza61810511"
 
-# استفاده از اسکریپت expect برای تعامل خودکار با vpncmd و دریافت لیست کاربران
-expect <<EOF
+  # تعریف پسورد ثابت ادمین
+  #admin_password="12345678"
+
+  # اجرای اسکریپت expect برای دریافت اطلاعات کاربران
+  expect <<EOF > /tmp/vpncmd_output.txt
 spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
 
 # انتخاب گزینه برای تنظیمات سرور
@@ -232,42 +233,17 @@ send "exit\r"
 expect eof
 EOF
 
-# استخراج اطلاعات نام کاربری و تاریخ انقضا از خروجی
-echo -e "${YELLOW}User Name and Expiration Date in Shamsi:${NC}"
+  # تابع تبدیل تاریخ میلادی به شمسی
+  convert_to_shamsi() {
+    local miladi_date="$1"
+    clean_date=$(echo "$miladi_date" | sed 's/ (.*)//' | cut -d' ' -f1)
 
-# ذخیره خروجی در فایل موقت
-output=$(expect -c "
-spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
-expect \"Select 1, 2 or 3:\"
-send \"1\r\"
-expect \"Password:\"
-send \"$admin_password\r\"
-expect \"VPN Server>\"
-send \"hub fr\r\"
-expect \"VPN Server/FR>\"
-send \"UserList\r\"
-expect \"VPN Server/FR>\"
-send \"exit\r\"
-expect eof
-")
+    if [[ "$clean_date" == "No" ]]; then
+      echo "No Expiration"
+      return
+    fi
 
-# ذخیره خروجی در فایل موقت
-echo "$output" > /tmp/vpncmd_output.txt
-
-# تابع تبدیل تاریخ میلادی به شمسی
-convert_to_shamsi() {
-  local miladi_date="$1"
-  # استخراج تاریخ در فرمت YYYY-MM-DD (حذف روز هفته و ساعت)
-  clean_date=$(echo "$miladi_date" | sed 's/ (.*)//' | cut -d' ' -f1)
-
-  # اگر تاریخ معتبر نبود (مانند No Expiration)، خروجی خالی برگرداند
-  if [[ "$clean_date" == "No" ]]; then
-    echo "No Expiration"
-    return
-  fi
-
-  # استفاده از Python برای تبدیل تاریخ
-  python3 -c "
+    python3 -c "
 from persiantools.jdatetime import JalaliDate
 try:
     miladi_date = '${clean_date}'
@@ -276,12 +252,7 @@ try:
 except ValueError:
     print('Invalid Date')
 "
-}
-
-# پردازش خروجی vpncmd
-
-# فایل ورودی
-input_file="/tmp/vpncmd_output.txt"
+  }
 
   # پردازش خروجی vpncmd
   echo -e "${YELLOW}User Name and Expiration Date in Shamsi:${NC}"
@@ -309,7 +280,7 @@ input_file="/tmp/vpncmd_output.txt"
   done < /tmp/vpncmd_output.txt
 
 # تعریف پسورد ثابت ادمین
-#admin_password="Mohamadreza61810511"
+#admin_password="12345678"
 
 # گرفتن یوزرنیم کاربر از کاربر
 echo -ne "${YELLOW}Enter the username for which you want to check the expiration date: ${NC}"
@@ -443,7 +414,7 @@ EOF
 
 
 # تعریف پسورد ثابت ادمین
-#admin_password="Mohamadreza61810511"
+#admin_password="12345678"
 
 # گرفتن یوزرنیم کاربر از کاربر
 #echo -ne "${YELLOW}Enter the username for which you want to check the expiration date: ${NC}"
@@ -470,7 +441,7 @@ send "hub fr\r"
 
 # دریافت اطلاعات کاربر
 expect "VPN Server/FR>"
-send "UserGet $username\r"
+send "UserGet $new_username\r"
 
 # خروج از vpncmd
 expect "VPN Server/FR>"
@@ -513,7 +484,7 @@ send "hub fr\r"
 
 # تنظیم تاریخ انقضا
 expect "VPN Server/FR>"
-send "UserExpiresSet $username /EXPIRES:\"$expiration_date\"\r"
+send "UserExpiresSet $new_username /EXPIRES:\"$expiration_date\"\r"
 
 # خروج از vpncmd
 expect "VPN Server/FR>"
@@ -523,7 +494,7 @@ expect eof
 
 EOF
 
-echo -e "${GREEN}The expiration date for user '$username' has been successfully updated to $expiration_date.${NC}"
+echo -e "${GREEN}The expiration date for user '$new_username' has been successfully updated to $expiration_date.${NC}"
 
 
 
@@ -540,7 +511,7 @@ echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
 read  admin_password  # مخفی کردن رمز عبور
 echo ""
   # تعریف پسورد ثابت ادمین
-  #admin_password="Mohamadreza61810511"
+  #admin_password="12345678"
 
   # اجرای اسکریپت expect برای دریافت اطلاعات کاربران
   expect <<EOF > /tmp/vpncmd_output.txt
@@ -617,7 +588,7 @@ except ValueError:
 
 
 }
-
+################################
 
 uninstall() {
     clear
