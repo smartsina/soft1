@@ -302,7 +302,7 @@ while IFS= read -r line; do
     fi
 
     # چاپ اطلاعات
-    echo "DEBUG: Outp -     ${YELLOW}$username ${GREEN}$expiration_date${NC}"  # دیباگ برای خروجی نهایی
+    echo -e "${YELLOW}$username ${GREEN}$expiration_date${NC}"  # دیباگ برای خروجی نهایی
 #    echo "$username $expiration_date"
   fi
 done < /tmp/vpncmd_output.txt
