@@ -502,7 +502,174 @@ echo -e "${GREEN}The expiration date for user '$new_username' has been successfu
 echo -e "${GREEN}The new user '$new_username' has been created successfully.${NC}"
 echo -e "${GREEN}You can now use this username and password to log in to the SoftEther VPN server.${NC}"
 }
+########################################
+delete_user () {
 
+# گرفتن رمز عبور ادمین از کاربر
+echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
+read  admin_password  # مخفی کردن رمز عبور
+echo ""
+
+
+  # تعریف پسورد ثابت ادمین
+  #admin_password="12345678"
+
+  # اجرای اسکریپت expect برای دریافت اطلاعات کاربران
+  expect <<EOF > /tmp/vpncmd_output.txt
+spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
+
+# انتخاب گزینه برای تنظیمات سرور
+expect "Select 1, 2 or 3:"
+send "1\r"
+
+# وارد کردن رمز عبور ادمین
+expect "Password:"
+send "$admin_password\r"
+
+# انتخاب هاب FR
+expect "VPN Server>"
+send "hub fr\r"
+
+# دریافت لیست کاربران
+expect "VPN Server/FR>"
+send "UserList\r"
+
+# خروج از vpncmd
+expect "VPN Server/FR>"
+send "exit\r"
+
+expect eof
+EOF
+
+  # تابع تبدیل تاریخ میلادی به شمسی
+  convert_to_shamsi() {
+    local miladi_date="$1"
+    clean_date=$(echo "$miladi_date" | sed 's/ (.*)//' | cut -d' ' -f1)
+
+    if [[ "$clean_date" == "No" ]]; then
+      echo "No Expiration"
+      return
+    fi
+
+    python3 -c "
+from persiantools.jdatetime import JalaliDate
+try:
+    miladi_date = '${clean_date}'
+    shamsi_date = JalaliDate.to_jalali(*map(int, miladi_date.split('-')))
+    print(shamsi_date)
+except ValueError:
+    print('Invalid Date')
+"
+  }
+
+  # پردازش خروجی vpncmd
+  echo -e "${YELLOW}User Name and Expiration Date in Shamsi:${NC}"
+
+  while IFS= read -r line; do
+    # بررسی و استخراج نام کاربری
+    if [[ "$line" == *"User Name"* ]]; then
+      username=$(echo "$line" | awk -F '|' '{print $2}' | xargs)
+      continue
+    fi
+
+    # بررسی و استخراج تاریخ انقضا
+    if [[ "$line" == *"Expiration Date"* ]]; then
+      expiration=$(echo "$line" | awk -F '|' '{print $2}' | xargs)
+
+      if [[ "$expiration" != "No Expiration" ]]; then
+        expiration_date=$(convert_to_shamsi "$expiration")
+      else
+        expiration_date="No Expiration"
+      fi
+
+      # چاپ اطلاعات به فرمت مناسب
+      printf " %-15s - %s\n" "$expiration_date" "$username"
+    fi
+  done < /tmp/vpncmd_output.txt
+
+# تعریف پسورد ثابت ادمین
+#admin_password="12345678"
+
+# گرفتن یوزرنیم کاربر از کاربر
+echo -ne "${YELLOW}Enter the username for which you want to check the expiration date: ${NC}"
+read username
+echo ""
+
+# استفاده از اسکریپت expect برای تعامل خودکار با vpncmd و دریافت اطلاعات کاربر
+output=$(expect <<EOF
+spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
+
+# انتخاب گزینه برای تنظیمات سرور
+expect "Select 1, 2 or 3:"
+send "1\r"
+
+# وارد کردن رمز عبور ادمین
+expect "Password:"
+send "$admin_password\r"
+
+# انتخاب هاب FR
+expect "VPN Server>"
+send "hub fr\r"
+
+# دریافت اطلاعات کاربر
+expect "VPN Server/FR>"
+send "UserGet $username\r"
+
+# خروج از vpncmd
+expect "VPN Server/FR>"
+send "exit\r"
+
+expect eof
+EOF
+)
+
+# استخراج تاریخ انقضا از خروجی
+expiration_date=$(echo "$output" | grep "Expiration" | awk -F': ' '{print $2}')
+
+# چک کردن اگر تاریخ انقضا موجود باشد
+if [ -z "$expiration_date" ]; then
+  echo -e "${YELLOW}No expiration date found for user '$username'. Setting expiration to 1 month from now.${NC}"
+
+  # اگر تاریخ انقضا وجود ندارد، تاریخ کنونی + 1 ماه محاسبه می‌شود و فرمت مورد نظر تنظیم می‌شود
+  expiration_date=$(date -d "+1 month" "+%Y/%m/%d %H:%M:%S")
+else
+  echo -e "${GREEN}Expiration date for user '$username' is: $expiration_date.${NC}"
+fi
+
+echo -e "${GREEN}Setting new expiration date to: $expiration_date.${NC}"
+
+# استفاده از دستور UserExpiresSet برای تغییر تاریخ انقضا
+expect <<EOF
+spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
+
+# ورود به تنظیمات سرور
+expect "Select 1, 2 or 3:"
+send "1\r"
+
+# وارد کردن رمز عبور
+expect "Password:"
+send "$admin_password\r"
+
+# انتخاب هاب
+expect "VPN Server>"
+send "hub fr\r"
+
+# تنظیم تاریخ انقضا
+expect "VPN Server/FR>"
+send "UserDelete $username "
+
+# خروج از vpncmd
+expect "VPN Server/FR>"
+send "exit\r"
+
+expect eof
+
+EOF
+
+echo -e "${GREEN}The expiration date for user '$username' has been successfully updated to $expiration_date.${NC}"
+
+
+}
 
 ################################
 see-expieration-date() {
@@ -1144,11 +1311,12 @@ while true; do
     echo ""
     echo -e "${YELLOW}______________________________________________________${NC}"
     echo ""
-    echo -e "${CYAN} 6${NC}) ${RED}=> ${YELLOW}6to4 IPV6 Menu${NC}"
-    echo -e "${CYAN} 7${NC}) ${RED}=> ${YELLOW}Extra native IPV6 Menu${NC}"
+    echo -e "${CYAN} 6${NC}) ${RED}=> ${YELLOW}add 1month expierationdate${NC}"
+    echo -e "${CYAN} 7${NC}) ${RED}=> ${YELLOW}delete user${NC}"
+    echo -e "${CYAN} h${NC}) ${RED}=> ${YELLOW}6to4 IPV6 Menu${NC}"
+    echo -e "${CYAN} j${NC}) ${RED}=> ${YELLOW}Extra native IPV6 Menu${NC}"
     echo -e "${CYAN} 8${NC}) ${RED}=> ${YELLOW}see expieration time of users${NC}"
     echo -e "${CYAN} 9${NC}) ${RED}=> ${YELLOW}add user ${NC}"
-    echo -e "${CYAN} A${NC}) ${RED}=> ${YELLOW}add 1month expierationdate${NC}"
     echo ""
     echo -e "${YELLOW}______________________________________________________${NC}"
     echo ""
@@ -1179,13 +1347,20 @@ while true; do
         8)
             see-expieration-date
             ;;
-        [aA])
-            add-expieration-date
+        6)
+            add-expieration-date 
+            
             ;;
+
+        7)
+            delete_user
+            
+            ;;
+        
         5)
             uninstall
             ;;
-        6)
+       [gG])
         clear
             title_text="6to4 IPV6 Menu"
             
@@ -1226,7 +1401,7 @@ while true; do
                 ;;                   
                 esac
         ;;
-        7)
+        [jJ])
         clear
             title_text="Extra IPV6 Menu"
             tg_title=""
