@@ -280,36 +280,36 @@ except ValueError:
 
 # پردازش خروجی vpncmd
 while IFS= read -r line; do
-  # بررسی و استخراج نام کاربری
-  if [[ "$line" == *"User Name"* ]]; then
-    username="$(echo "$line" | awk -F '|' '{print $2}' | xargs)"
-#    echo "DEBUG: Extracted username = $username"  # دیباگ برای نام کاربری
-    continue
-  fi
-
-  # بررسی و استخراج تاریخ انقضا
-  if [[ "$line" == *"Expiration Date"* ]]; then
-    expiration=$(echo "$line" | awk -F '|' '{print $2}' | xargs)
-    
-    # چاپ تاریخ میلادی برای دیباگ
-#    echo "DEBUG: Extracted expiration = $expiration"
-    
-    # تبدیل تاریخ میلادی به شمسی در صورت وجود
-    if [[ "$expiration" != "No Expiration" ]]; then
-      expiration_date=$(convert_to_shamsi "$expiration")
-    else
-      expiration_date="No Expiration"
+    # بررسی و استخراج نام کاربری
+    if [[ "$line" == *"User Name"* ]]; then
+        username=$(echo "$line" | awk -F '|' '{print $2}' | xargs)
+        if [[ -z "$username" ]]; then
+            echo "Error extracting username from line: $line" >&2
+        fi
+        continue # به خط بعدی برو
     fi
-#while read username expiration_date; do
-    echo -e "${YELLOW}$username ${GREEN}$expiration_date${NC}"
-#done < /tmp/vpncmd_output.txt
-    # چاپ اطلاعات
-#    echo -e "${YELLOW}$username ${GREEN}$expiration_date${NC}"  # دیباگ برای خروجی نهایی
-#    echo "$username $expiration_date"
-#  fi
+
+    # بررسی و استخراج تاریخ انقضا
+    if [[ "$line" == *"Expiration Date"* ]]; then
+        expiration=$(echo "$line" | awk -F '|' '{print $2}' | xargs)
+        if [[ -z "$expiration" ]]; then
+            echo "Error extracting expiration from line: $line" >&2
+        fi
+
+        if [[ "$expiration" != "No Expiration" ]]; then
+            expiration_date=$(convert_to_shamsi "$expiration")
+        else
+            expiration_date="No Expiration"
+        fi
+    fi
 done < /tmp/vpncmd_output.txt
 
-
+# چاپ اطلاعات *بعد از اتمام حلقه*
+if [[ ! -z "$username" && ! -z "$expiration_date" ]]; then
+    echo -e "${YELLOW}$username ${GREEN}$expiration_date${NC}"
+else
+    echo "Error: Could not extract both username and expiration date." >&2
+fi
 
 # تعریف پسورد ثابت ادمین
 #admin_password="Mohamadreza61810511"
