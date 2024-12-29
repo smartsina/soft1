@@ -1205,7 +1205,7 @@ while true; do
     echo -e "${CYAN} 7${NC}) ${RED}=> ${YELLOW}Extra native IPV6 Menu${NC}"
     echo -e "${CYAN} 8${NC}) ${RED}=> ${YELLOW}see expieration time of users${NC}"
     echo -e "${CYAN} 9${NC}) ${RED}=> ${YELLOW}add user ${NC}"
-    echo -e "${CYAN} 10${NC}) ${RED}=> ${YELLOW}add 1month expierationdate${NC}"
+    echo -e "${CYAN} A${NC}) ${RED}=> ${YELLOW}add 1month expierationdate${NC}"
     echo ""
     echo -e "${YELLOW}______________________________________________________${NC}"
     echo ""
