@@ -197,10 +197,120 @@ EOF
 
 add-expieration-date () {
 
+# گرفتن رمز عبور ادمین از کاربر
+echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
+read  admin_password  # مخفی کردن رمز عبور
+echo ""
+
+# تعریف پسورد ثابت ادمین
+#admin_password="Mohamadreza61810511"
+
+# استفاده از اسکریپت expect برای تعامل خودکار با vpncmd و دریافت لیست کاربران
+expect <<EOF
+spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
+
+# انتخاب گزینه برای تنظیمات سرور
+expect "Select 1, 2 or 3:"
+send "1\r"
+
+# وارد کردن رمز عبور ادمین
+expect "Password:"
+send "$admin_password\r"
+
+# انتخاب هاب FR
+expect "VPN Server>"
+send "hub fr\r"
+
+# دریافت لیست کاربران
+expect "VPN Server/FR>"
+send "UserList\r"
+
+# خروج از vpncmd
+expect "VPN Server/FR>"
+send "exit\r"
+
+expect eof
+EOF
+
+# استخراج اطلاعات نام کاربری و تاریخ انقضا از خروجی
+echo -e "${YELLOW}User Name and Expiration Date in Shamsi:${NC}"
+
+# ذخیره خروجی در فایل موقت
+output=$(expect -c "
+spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
+expect \"Select 1, 2 or 3:\"
+send \"1\r\"
+expect \"Password:\"
+send \"$admin_password\r\"
+expect \"VPN Server>\"
+send \"hub fr\r\"
+expect \"VPN Server/FR>\"
+send \"UserList\r\"
+expect \"VPN Server/FR>\"
+send \"exit\r\"
+expect eof
+")
+
+# ذخیره خروجی در فایل موقت
+echo "$output" > /tmp/vpncmd_output.txt
+
+# تابع تبدیل تاریخ میلادی به شمسی
+convert_to_shamsi() {
+  local miladi_date="$1"
+  # استخراج تاریخ در فرمت YYYY-MM-DD (حذف روز هفته و ساعت)
+  clean_date=$(echo "$miladi_date" | sed 's/ (.*)//' | cut -d' ' -f1)
+
+  # اگر تاریخ معتبر نبود (مانند No Expiration)، خروجی خالی برگرداند
+  if [[ "$clean_date" == "No" ]]; then
+    echo "No Expiration"
+    return
+  fi
+
+  # استفاده از Python برای تبدیل تاریخ
+  python3 -c "
+from persiantools.jdatetime import JalaliDate
+try:
+    miladi_date = '${clean_date}'
+    shamsi_date = JalaliDate.to_jalali(*map(int, miladi_date.split('-')))
+    print(shamsi_date)
+except ValueError:
+    print('Invalid Date')
+"
+}
+
+# پردازش خروجی vpncmd
+while IFS= read -r line; do
+  # بررسی و استخراج نام کاربری
+  if [[ "$line" == *"User Name"* ]]; then
+    username="$(echo "$line" | awk -F '|' '{print $2}' | xargs)"
+#    echo "DEBUG: Extracted username = $username"  # دیباگ برای نام کاربری
+    continue
+  fi
+
+  # بررسی و استخراج تاریخ انقضا
+  if [[ "$line" == *"Expiration Date"* ]]; then
+    expiration=$(echo "$line" | awk -F '|' '{print $2}' | xargs)
+    
+    # چاپ تاریخ میلادی برای دیباگ
+#    echo "DEBUG: Extracted expiration = $expiration"
+    
+    # تبدیل تاریخ میلادی به شمسی در صورت وجود
+    if [[ "$expiration" != "No Expiration" ]]; then
+      expiration_date=$(convert_to_shamsi "$expiration")
+    else
+      expiration_date="No Expiration"
+    fi
+
+    # چاپ اطلاعات
+    echo "DEBUG: Outp -     ${YELLOW}$username ${GREEN}$expiration_date${NC}"  # دیباگ برای خروجی نهایی
+#    echo "$username $expiration_date"
+  fi
+done < /tmp/vpncmd_output.txt
+
 
 
 # تعریف پسورد ثابت ادمین
-admin_password="Mohamadreza61810511"
+#admin_password="Mohamadreza61810511"
 
 # گرفتن یوزرنیم کاربر از کاربر
 echo -ne "${YELLOW}Enter the username for which you want to check the expiration date: ${NC}"
@@ -334,12 +444,14 @@ EOF
 
 
 # تعریف پسورد ثابت ادمین
-admin_password="Mohamadreza61810511"
+#admin_password="Mohamadreza61810511"
 
 # گرفتن یوزرنیم کاربر از کاربر
-echo -ne "${YELLOW}Enter the username for which you want to check the expiration date: ${NC}"
-read username
-echo ""
+#echo -ne "${YELLOW}Enter the username for which you want to check the expiration date: ${NC}"
+#read username
+#echo ""
+
+username = $new_username
 
 # استفاده از اسکریپت expect برای تعامل خودکار با vpncmd و دریافت اطلاعات کاربر
 output=$(expect <<EOF
