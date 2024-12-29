@@ -1236,7 +1236,7 @@ while true; do
         8)
             see-expieration-date
             ;;
-        10)
+        [aA])
             add-expieration-date
             ;;
         5)
