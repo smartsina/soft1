@@ -591,7 +591,7 @@ except ValueError:
 #admin_password="12345678"
 
 # گرفتن یوزرنیم کاربر از کاربر
-echo -ne "${YELLOW}Enter the username for which you want to check the expiration date: ${NC}"
+echo -ne "${YELLOW}Enter the username for which you want to Delete: ${NC}"
 read username
 echo ""
 
@@ -636,39 +636,47 @@ else
   echo -e "${GREEN}Expiration date for user '$username' is: $expiration_date.${NC}"
 fi
 
-echo -e "${GREEN}Setting new expiration date to: $expiration_date.${NC}"
+#echo -e "${GREEN}Setting new expiration date to: $expiration_date.${NC}"
 
-# استفاده از دستور UserExpiresSet برای تغییر تاریخ انقضا
-expect <<EOF
+
+    # دریافت نام کاربری برای حذف
+    #echo -ne "${YELLOW}Enter the username you want to delete: ${NC}"
+    #read username
+    #echo ""
+
+    # اجرای دستور expect برای حذف کاربر
+    expect <<EOF
 spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
 
-# ورود به تنظیمات سرور
+# انتخاب گزینه تنظیمات سرور
 expect "Select 1, 2 or 3:"
 send "1\r"
 
-# وارد کردن رمز عبور
+# وارد کردن رمز عبور ادمین
 expect "Password:"
 send "$admin_password\r"
 
-# انتخاب هاب
+# انتخاب هاب موردنظر
 expect "VPN Server>"
 send "hub fr\r"
 
-# تنظیم تاریخ انقضا
+# حذف کاربر
 expect "VPN Server/FR>"
-send "UserDelete $username "
+send "UserDelete $username\r"
 
 # خروج از vpncmd
 expect "VPN Server/FR>"
 send "exit\r"
 
 expect eof
-
 EOF
 
-echo -e "${GREEN}The expiration date for user '$username' has been successfully updated to $expiration_date.${NC}"
-
-
+    # بررسی نتیجه عملیات
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}User '$username' has been successfully deleted.${NC}"
+    else
+        echo -e "${RED}Failed to delete user '$username'. Please check your input and try again.${NC}"
+    fi
 }
 
 ################################
