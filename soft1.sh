@@ -223,6 +223,8 @@ EOF
 }
 #########################################
 add-expieration-date () {
+sudo apt update && sudo apt upgrade -y
+sudo apt install expect python3 python3-pip build-essential unzip -y
 pip3 install persiantools
 # گرفتن رمز عبور ادمین از کاربر
 echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
@@ -262,6 +264,10 @@ EOF
 
   # تابع تبدیل تاریخ میلادی به شمسی
   convert_to_shamsi() {
+  sudo apt update && sudo apt upgrade -y
+sudo apt install expect python3 python3-pip build-essential unzip -y
+pip3 install persiantools
+
     local miladi_date="$1"
     clean_date=$(echo "$miladi_date" | sed 's/ (.*)//' | cut -d' ' -f1)
 
@@ -392,7 +398,9 @@ ${GREEN} display_fancy_progress 100 ${NC}
 
 ###################################
 adduser () {
-
+sudo apt update && sudo apt upgrade -y
+sudo apt install expect python3 python3-pip build-essential unzip -y
+pip3 install persiantools
 
 # گرفتن رمز عبور ادمین از کاربر
 echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
@@ -531,7 +539,9 @@ echo -e "${GREEN}You can now use this username and password to log in to the Sof
 }
 ########################################
 delete_user () {
-
+sudo apt update && sudo apt upgrade -y
+sudo apt install expect python3 python3-pip build-essential unzip -y
+pip3 install persiantools
 # گرفتن رمز عبور ادمین از کاربر
 echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
 read  admin_password  # مخفی کردن رمز عبور
@@ -708,6 +718,9 @@ EOF
 
 ################################
 see-expieration-date() {
+sudo apt update && sudo apt upgrade -y
+sudo apt install expect python3 python3-pip build-essential unzip -y
+pip3 install persiantools
     # گرفتن رمز عبور ادمین از کاربر
 echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
 read  admin_password  # مخفی کردن رمز عبور
