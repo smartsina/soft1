@@ -160,6 +160,7 @@ case "$reboot" in
         return 
         ;;
     esac
+    display_fancy_progress 100
 exit
 }
 
@@ -218,10 +219,11 @@ expect <<EOF
 EOF
 
    echo -e "${GREEN}Go to SOFTETHER SERVER MANAGER use your IP and ${password}.${NC}"
+   ${GREEN} display_fancy_progress 100 ${NC}
 }
 #########################################
 add-expieration-date () {
-
+pip3 install persiantools
 # گرفتن رمز عبور ادمین از کاربر
 echo -ne "${YELLOW}Enter your desired admin password: ${NC}"
 read  admin_password  # مخفی کردن رمز عبور
@@ -354,7 +356,7 @@ else
 fi
 
 echo -e "${GREEN}Setting new expiration date to: $expiration_date.${NC}"
-
+${GREEN} display_fancy_progress 50 ${NC}
 # استفاده از دستور UserExpiresSet برای تغییر تاریخ انقضا
 expect <<EOF
 spawn sudo /usr/local/vpnserver/vpncmd 127.0.0.1:5555
@@ -385,7 +387,7 @@ EOF
 
 echo -e "${GREEN}The expiration date for user '$username' has been successfully updated to $expiration_date.${NC}"
 
-
+${GREEN} display_fancy_progress 100 ${NC}
 }
 
 ###################################
